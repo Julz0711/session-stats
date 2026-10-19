@@ -18,5 +18,19 @@ jobs:
           CP=$(find ~/.gradle /home/runner/work -name '*.jar' 2>/dev/null | grep -v -e sources -e wrapper | tr '\n' ':')
           while read -r c; do
             echo "===== $c"
-            javap -cp "$CP" "$c" 2>&1 | grep -v '^Compiled from' | sed 's/^/  /'
+            javap -cp "$CP" "$c" 2>&1 | grep -v -e '^Compiled from' -e 'lambda\$' | sed 's/^/  /'
           done < probe-classes.txt
+          for c in net.minecraft.client.gui.screens.Screen net.minecraft.client.gui.screens.options.OptionsSubScreen; do
+            echo "===== BYTECODE $c onClose"
+            javap -c -cp "$CP" "$c" | sed -n '/public void onClose()/,/^$/p'
+          done
+          echo "===== BYTECODE Minecraft setScreenAndShow / getToastManager-ish"
+          javap -c -cp "$CP" net.minecraft.client.Minecraft | sed -n '/public void setScreenAndShow/,/^$/p'
+          javap -c -cp "$CP" net.minecraft.client.gui.screens.Screen | grep -E 'invoke.*(Gui|toast|Toast|setScreen|screen)' | sort -u | head -40
+          echo "===== who has setScreen"
+          MC=$(find ~/.gradle -name '*.jar' | while read j; do unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class' && echo "$j"; done | head -1)
+          echo "MC jar $MC"
+          for n in $(unzip -l "$MC" | grep -oE 'net/minecraft/client/[A-Za-z0-9/]*\.class' | grep -v '\$' | sed 's/\.class$//; s#/#.#g'); do
+            out=$(javap -cp "$CP" "$n" 2>/dev/null | grep -E ' (setScreen|screen|getScreen|toastManager|getToastManager|getToasts)\(')
+            [ -n "$out" ] && echo "$n:" && echo "$out"
+          done
