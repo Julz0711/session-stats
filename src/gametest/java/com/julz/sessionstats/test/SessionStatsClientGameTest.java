@@ -17,7 +17,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 
@@ -62,7 +61,6 @@ public class SessionStatsClientGameTest implements FabricClientGameTest {
                 player.awardStat(Stats.BLOCK_MINED.get(Blocks.STONE), 12);
                 player.awardStat(Stats.BLOCK_MINED.get(Blocks.DIAMOND_ORE), 3);
                 player.awardStat(Stats.ITEM_USED.get(Items.DIRT), 5);
-                player.awardStat(Stats.ENTITY_KILLED.get(EntityType.ZOMBIE), 2);
                 player.awardStat(Stats.CUSTOM.get(Stats.MOB_KILLS), 2);
                 player.giveExperiencePoints(30);
             });
