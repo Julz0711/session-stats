@@ -1,0 +1,15 @@
+{
+	"schemaVersion": 1,
+	"id": "session-stats-test",
+	"version": "1.0.0",
+	"name": "Session Stats Tests",
+	"environment": "client",
+	"entrypoints": {
+		"fabric-client-gametest": [
+			"com.julz.sessionstats.test.SessionStatsClientGameTest"
+		]
+	},
+	"depends": {
+		"session-stats": "*"
+	}
+}
