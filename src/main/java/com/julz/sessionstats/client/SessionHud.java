@@ -36,7 +36,7 @@ final class SessionHud {
     static void render(GuiGraphicsExtractor graphics, Minecraft client) {
         SessionRecorder recorder = SessionController.recorder();
         ModConfig config = ModConfig.getInstance();
-        if (!config.showHud || !recorder.isActive() || client.player == null || client.options.hideGui) {
+        if (!config.showHud || !recorder.isActive() || client.player == null) {
             return;
         }
         Session session = recorder.current();
