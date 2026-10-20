@@ -47,6 +47,21 @@ public class SessionStatsClientGameTest implements FabricClientGameTest {
         context.setScreen(() -> new SessionStatsConfigScreen(null));
         context.waitForScreen(SessionStatsConfigScreen.class);
         context.takeScreenshot("session-stats-config-screen");
+
+        // Outside a world items have no components yet, so the ore list must draw without icons
+        context.runOnClient(client -> ModConfig.getInstance().hudShowOres = true);
+        context.setScreen(() -> new HudEditorScreen(null));
+        context.waitForScreen(HudEditorScreen.class);
+        context.waitTicks(2);
+        Session sample = new Session();
+        sample.world = "Title Screen";
+        sample.activeMillis = 30 * 60_000;
+        sample.finished = true;
+        sample.stats.put(DIAMOND, 4L);
+        context.setScreen(() -> new SummaryScreen(null, sample));
+        context.waitForScreen(SummaryScreen.class);
+        context.waitTicks(2);
+        context.runOnClient(client -> ModConfig.getInstance().hudShowOres = false);
         context.setScreen(() -> null);
 
         try (TestSingleplayerContext singleplayer = context.worldBuilder().create()) {

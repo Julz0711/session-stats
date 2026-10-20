@@ -91,8 +91,19 @@ final class Ui {
         return block != null ? block.getName() : Component.literal(id);
     }
 
+    /**
+     * The block's item for drawing, or empty when there is none. Items only get their components once a
+     * world is loaded, so outside a world (the title screen, Mod Menu) there are no icons.
+     */
     static ItemStack blockIcon(String id) {
         Block block = block(id);
-        return block != null ? new ItemStack(block) : ItemStack.EMPTY;
+        if (block == null || Minecraft.getInstance().level == null) {
+            return ItemStack.EMPTY;
+        }
+        try {
+            return new ItemStack(block);
+        } catch (RuntimeException e) {
+            return ItemStack.EMPTY;
+        }
     }
 }
