@@ -17,8 +17,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 public class ModConfig {
-    public static final int MAX_HUD_STATS = 5;
-
     private static final Path CONFIG_FILE = FabricLoader.getInstance().getConfigDir().resolve("session-stats.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static ModConfig instance;
@@ -26,8 +24,16 @@ public class ModConfig {
     // Start a session when joining a world or server. Sessions always stop when leaving.
     public boolean autoStart = false;
     public boolean showHud = true;
-    // Up to 5 of: BLOCKS_MINED, BLOCKS_PLACED, ORES_MINED, MOB_KILLS, DEATHS, DISTANCE, XP
+    // Any of: BLOCKS_MINED, BLOCKS_PLACED, ORES_MINED, MOB_KILLS, DEATHS, DISTANCE, WALKED, FLOWN, RIDDEN, XP
     public List<String> hudStats = new ArrayList<>(List.of("BLOCKS_MINED", "ORES_MINED", "DISTANCE"));
+    // HUD look: size in percent, background opacity in percent, and what else it shows.
+    public int hudScale = 100;
+    public int hudOpacity = 80;
+    public HudColor hudColor = HudColor.TEAL;
+    public boolean hudShowTimer = true;
+    public boolean hudShowRates = false;
+    public boolean hudShowOres = false;
+    public boolean hudTextShadow = false;
     // Where the HUD sits: the corner it is attached to, and its distance from that corner in GUI pixels.
     public Corner hudCorner = Corner.TOP_LEFT;
     public int hudOffsetX = 4;
@@ -53,6 +59,21 @@ public class ModConfig {
                 return right ? BOTTOM_RIGHT : BOTTOM_LEFT;
             }
             return right ? TOP_RIGHT : TOP_LEFT;
+        }
+    }
+
+    /** The color of the HUD's values. */
+    public enum HudColor {
+        TEAL(0xFF5EEAD4), WHITE(0xFFF2F4F5), GOLD(0xFFFFC857), GREEN(0xFF7EE787), BLUE(0xFF79B8FF), PINK(0xFFFF8AD8);
+
+        public final int argb;
+
+        HudColor(int argb) {
+            this.argb = argb;
+        }
+
+        public HudColor next() {
+            return values()[(ordinal() + 1) % values().length];
         }
     }
 
@@ -108,10 +129,14 @@ public class ModConfig {
         hudOffsetX = Math.clamp(hudOffsetX, 0, 4000);
         hudOffsetY = Math.clamp(hudOffsetY, 0, 4000);
         refreshSeconds = Math.clamp(refreshSeconds, 10, 300);
+        hudScale = Math.clamp(hudScale, 50, 200);
+        hudOpacity = Math.clamp(hudOpacity, 0, 100);
+        if (hudColor == null) {
+            hudColor = HudColor.TEAL;
+        }
         if (hudStats == null) {
             hudStats = new ArrayList<>();
         }
-        List<String> valid = new ArrayList<>(new LinkedHashSet<>(hudStats().stream().map(Enum::name).toList()));
-        hudStats = new ArrayList<>(valid.subList(0, Math.min(valid.size(), MAX_HUD_STATS)));
+        hudStats = new ArrayList<>(new LinkedHashSet<>(hudStats().stream().map(Enum::name).toList()));
     }
 }

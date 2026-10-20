@@ -8,6 +8,7 @@ import com.julz.sessionstats.client.SummaryScreen;
 import com.julz.sessionstats.config.ModConfig;
 import com.julz.sessionstats.core.Session;
 import com.julz.sessionstats.core.SessionRecorder;
+import com.julz.sessionstats.core.SessionTotals;
 import com.julz.sessionstats.core.StatKeys;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
@@ -22,6 +23,7 @@ import net.minecraft.world.level.block.Blocks;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -110,6 +112,20 @@ public class SessionStatsClientGameTest implements FabricClientGameTest {
             context.setScreen(() -> new HudEditorScreen(null));
             context.waitForScreen(HudEditorScreen.class);
             context.takeScreenshot("session-stats-hud-editor");
+
+            // Every stat and style option on, more than the old limit of 5 stats
+            context.runOnClient(client -> {
+                ModConfig config = ModConfig.getInstance();
+                config.hudStats = new ArrayList<>(Arrays.stream(SessionTotals.Stat.values()).map(Enum::name).toList());
+                config.hudShowRates = true;
+                config.hudShowOres = true;
+                config.hudTextShadow = true;
+                config.hudColor = ModConfig.HudColor.GOLD;
+                config.sanitize();
+                assertEquals(SessionTotals.Stat.values().length, config.hudStats().size(), "HUD stats kept");
+            });
+            context.waitTicks(2);
+            context.takeScreenshot("session-stats-hud-editor-all-options");
             context.setScreen(() -> null);
         }
     }

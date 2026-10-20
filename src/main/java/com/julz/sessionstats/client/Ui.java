@@ -39,6 +39,19 @@ final class Ui {
         graphics.outline(x, y, width, height, PANEL_BORDER);
     }
 
+    /** A panel with the background at {@code opacity} percent; nothing at 0. */
+    static void panel(GuiGraphicsExtractor graphics, int x, int y, int width, int height, int opacity) {
+        if (opacity <= 0) {
+            return;
+        }
+        graphics.fill(x, y, x + width, y + height, withAlpha(PANEL, (PANEL >>> 24) * opacity / 100));
+        graphics.outline(x, y, width, height, withAlpha(PANEL_BORDER, (PANEL_BORDER >>> 24) * opacity / 100));
+    }
+
+    static int withAlpha(int argb, int alpha) {
+        return (Math.clamp(alpha, 0, 255) << 24) | (argb & 0xFFFFFF);
+    }
+
     /** Text drawn larger than the font, for the big numbers. */
     static void scaledText(GuiGraphicsExtractor graphics, Font font, String text, int x, int y, int color, float scale) {
         graphics.pose().pushMatrix();

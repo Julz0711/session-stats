@@ -77,6 +77,9 @@ public record SessionTotals(long activeMillis, long blocksMined, long blocksPlac
             case MOB_KILLS -> mobKills;
             case DEATHS -> deaths;
             case DISTANCE -> distanceCm();
+            case WALKED -> walkCm;
+            case FLOWN -> flyCm;
+            case RIDDEN -> rideCm;
             case XP -> xp;
         };
     }
@@ -91,10 +94,10 @@ public record SessionTotals(long activeMillis, long blocksMined, long blocksPlac
 
     /** The stats a player can pick for the HUD or sort the history by. */
     public enum Stat {
-        BLOCKS_MINED, BLOCKS_PLACED, ORES_MINED, MOB_KILLS, DEATHS, DISTANCE, XP;
+        BLOCKS_MINED, BLOCKS_PLACED, ORES_MINED, MOB_KILLS, DEATHS, DISTANCE, WALKED, FLOWN, RIDDEN, XP;
 
         public boolean isDistance() {
-            return this == DISTANCE;
+            return this == DISTANCE || this == WALKED || this == FLOWN || this == RIDDEN;
         }
     }
 

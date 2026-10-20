@@ -12,11 +12,23 @@ import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.function.Supplier;
 
 /** Drag the HUD to where it should sit, and pick which stats it shows. */
 public class HudEditorScreen extends Screen {
+    private static final int COLUMNS = 4;
+    private static final int GAP = 4;
+    private static final int ROW = 22;
+    private static final int SECTION = 12;
+    private static final int[] SCALES = {50, 75, 100, 125, 150, 200};
+    private static final int[] OPACITIES = {0, 25, 50, 80, 100};
+
     private final Screen parent;
     private final List<Button> statButtons = new ArrayList<>();
+    private int sectionX;
+    private int statsY;
+    private int styleY;
     private SessionHud.Bounds hudBounds;
     private boolean dragging = false;
     private double grabX;
@@ -31,22 +43,88 @@ public class HudEditorScreen extends Screen {
     protected void init() {
         this.statButtons.clear();
         SessionTotals.Stat[] stats = SessionTotals.Stat.values();
-        int buttonWidth = 130;
-        int columns = 2;
-        int rows = (stats.length + columns - 1) / columns;
-        int left = this.width / 2 - buttonWidth - 2;
-        int top = this.height / 2 - rows * 12;
+        int buttonWidth = Math.min(96, (this.width - 20 - GAP * (COLUMNS - 1)) / COLUMNS);
+        int gridWidth = buttonWidth * COLUMNS + GAP * (COLUMNS - 1);
+        int left = (this.width - gridWidth) / 2;
+        int statRows = (stats.length + COLUMNS - 1) / COLUMNS;
+        int styleRows = 2;
+        int blockHeight = SECTION + statRows * ROW + SECTION + styleRows * ROW;
+        this.statsY = Math.max(36, (this.height - blockHeight) / 2);
+        int top = this.statsY + SECTION;
         for (int i = 0; i < stats.length; i++) {
             SessionTotals.Stat stat = stats[i];
             Button button = Button.builder(statLabel(stat), b -> toggle(stat))
-                    .bounds(left + (i % columns) * (buttonWidth + 4), top + (i / columns) * 24, buttonWidth, 20)
+                    .bounds(left + (i % COLUMNS) * (buttonWidth + GAP), top + (i / COLUMNS) * ROW, buttonWidth, 20)
                     .build();
             this.statButtons.add(button);
             addRenderableWidget(button);
         }
+
+        this.styleY = top + statRows * ROW;
+        List<StyleOption> style = List.of(
+                new StyleOption(() -> label("size", Component.literal(config().hudScale + "%")), () -> {
+                    config().hudScale = nextOf(SCALES, config().hudScale);
+                }),
+                new StyleOption(() -> label("background", Component.literal(config().hudOpacity + "%")), () -> {
+                    config().hudOpacity = nextOf(OPACITIES, config().hudOpacity);
+                }),
+                new StyleOption(() -> label("color", Component.translatable(
+                        "session-stats.hud_editor.color." + config().hudColor.name().toLowerCase(Locale.ROOT))), () -> {
+                    config().hudColor = config().hudColor.next();
+                }),
+                new StyleOption(() -> toggleLabel("timer", config().hudShowTimer), () -> {
+                    config().hudShowTimer = !config().hudShowTimer;
+                }),
+                new StyleOption(() -> toggleLabel("rates", config().hudShowRates), () -> {
+                    config().hudShowRates = !config().hudShowRates;
+                }),
+                new StyleOption(() -> toggleLabel("ores", config().hudShowOres), () -> {
+                    config().hudShowOres = !config().hudShowOres;
+                }),
+                new StyleOption(() -> toggleLabel("shadow", config().hudTextShadow), () -> {
+                    config().hudTextShadow = !config().hudTextShadow;
+                }));
+        for (int i = 0; i < style.size(); i++) {
+            StyleOption option = style.get(i);
+            addRenderableWidget(Button.builder(option.label().get(), b -> {
+                        option.action().run();
+                        b.setMessage(option.label().get());
+                    })
+                    .bounds(left + (i % COLUMNS) * (buttonWidth + GAP), this.styleY + SECTION + (i / COLUMNS) * ROW,
+                            buttonWidth, 20)
+                    .build());
+        }
+        this.sectionX = left;
+
         addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> onClose())
                 .bounds(this.width / 2 - 75, this.height - 28, 150, 20).build());
         updateButtons();
+    }
+
+    /** A look option: clicking runs {@code action}, then the button shows what {@code label} computes. */
+    private record StyleOption(Supplier<Component> label, Runnable action) {
+    }
+
+    private static Component label(String name, Component value) {
+        return Component.translatable("session-stats.hud_editor.option",
+                Component.translatable("session-stats.hud_editor." + name), value);
+    }
+
+    private static Component toggleLabel(String name, boolean on) {
+        return label(name, Component.translatable(on ? "options.on" : "options.off"));
+    }
+
+    private static int nextOf(int[] values, int current) {
+        for (int value : values) {
+            if (value > current) {
+                return value;
+            }
+        }
+        return values[0];
+    }
+
+    private static ModConfig config() {
+        return ModConfig.getInstance();
     }
 
     @Override
@@ -65,8 +143,12 @@ public class HudEditorScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         super.extractRenderState(graphics, mouseX, mouseY, delta);
         graphics.centeredText(this.font, this.title, this.width / 2, 10, Ui.ACCENT);
-        graphics.centeredText(this.font, Component.translatable("session-stats.hud_editor.hint",
-                        ModConfig.MAX_HUD_STATS), this.width / 2, 22, Ui.MUTED);
+        graphics.centeredText(this.font, Component.translatable("session-stats.hud_editor.hint"),
+                this.width / 2, 22, Ui.MUTED);
+        graphics.text(this.font, Component.translatable("session-stats.hud_editor.stats"),
+                this.sectionX, this.statsY + 2, Ui.MUTED, false);
+        graphics.text(this.font, Component.translatable("session-stats.hud_editor.style"),
+                this.sectionX, this.styleY + 2, Ui.MUTED, false);
         this.hudBounds = SessionHud.draw(graphics, this.font, previewSession(), false, ModConfig.getInstance());
         if (this.dragging || this.hudBounds.contains(mouseX, mouseY)) {
             graphics.outline(this.hudBounds.x() - 1, this.hudBounds.y() - 1,
@@ -122,20 +204,16 @@ public class HudEditorScreen extends Screen {
 
     private void toggle(SessionTotals.Stat stat) {
         ModConfig config = ModConfig.getInstance();
-        if (!config.hudStats.remove(stat.name()) && config.hudStats.size() < ModConfig.MAX_HUD_STATS) {
+        if (!config.hudStats.remove(stat.name())) {
             config.hudStats.add(stat.name());
         }
         updateButtons();
     }
 
     private void updateButtons() {
-        ModConfig config = ModConfig.getInstance();
         SessionTotals.Stat[] stats = SessionTotals.Stat.values();
         for (int i = 0; i < stats.length; i++) {
-            Button button = this.statButtons.get(i);
-            boolean shown = config.hudStats.contains(stats[i].name());
-            button.setMessage(statLabel(stats[i]));
-            button.active = shown || config.hudStats.size() < ModConfig.MAX_HUD_STATS;
+            this.statButtons.get(i).setMessage(statLabel(stats[i]));
         }
     }
 
@@ -156,6 +234,7 @@ public class HudEditorScreen extends Screen {
         sample.xp = 1_240;
         sample.stats.put(StatKeys.of(StatKeys.MINED, "minecraft:stone"), 1_874L);
         sample.stats.put(StatKeys.of(StatKeys.MINED, "minecraft:diamond_ore"), 23L);
+        sample.stats.put(StatKeys.of(StatKeys.MINED, "minecraft:deepslate_iron_ore"), 64L);
         sample.stats.put(StatKeys.of(StatKeys.PLACED, "minecraft:cobblestone"), 312L);
         sample.stats.put(StatKeys.MOB_KILLS, 41L);
         sample.stats.put(StatKeys.WALK, 342_000L);

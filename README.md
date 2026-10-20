@@ -21,10 +21,12 @@ All three can be changed in Controls → Key Binds → Session Stats. A line abo
 - **Session totals**: active time, blocks mined, blocks placed, ores by type (stone and deepslate variants
   added up), mob kills, deaths, distance walked, flown and ridden, and XP gained.
 - **Per-hour rates** for every total, for example "312 per hour".
-- **Live HUD**: a small panel with a recording dot, the timer and up to 5 stats you pick. Drag it anywhere in
-  the HUD editor (Mod Menu → Session Stats → Edit HUD). Can be turned off.
-- **Summary screen** when you stop: big numbers, rates, the top 5 blocks mined and the ores, with the world
-  name and date. "Copy as Text" puts the summary on the clipboard.
+- **Live HUD**: a small panel with a recording dot, the timer and any stats you pick, including distance walked,
+  flown and ridden separately. In the HUD editor (Mod Menu → Session Stats → Edit HUD) you drag it anywhere and
+  set its size, background opacity and color, and turn on per-hour rates, a per-ore list with icons, text shadow
+  or hide the timer. Can be turned off.
+- **Summary screen** when you stop: big numbers and rates for the stats that happened, the top 5 blocks mined
+  and the ores, with the world name, date and length. "Copy as Text" puts the summary on the clipboard.
 - **History**: every session of this world or server (or of all of them), sortable by date, length or any
   stat. Open one to see its summary again, or export the list as CSV.
 - **Auto start** (off by default): start recording when joining a world or server. Recording always stops
@@ -49,8 +51,8 @@ Each session is saved as one small JSON file:
 .minecraft/config/session-stats/<world or server>/<start time>.json
 ```
 
-A running session is saved every minute, so a crash loses little; such sessions show up in the history with a
-`*`. CSV exports are written to `.minecraft/config/session-stats/`, and the file's path is copied to the clipboard.
+A running session is saved every minute, and on leaving a world or closing the game, so a crash loses little;
+a session that was never stopped shows up in the history with a `*` and as "autosaved" in its summary. CSV exports are written to `.minecraft/config/session-stats/`, and the file's path is copied to the clipboard.
 
 ## Installation
 
@@ -71,13 +73,22 @@ Use the settings screen in Mod Menu, or edit `.minecraft/config/session-stats.js
   "hudCorner": "TOP_LEFT",
   "hudOffsetX": 4,
   "hudOffsetY": 4,
+  "hudScale": 100,
+  "hudOpacity": 80,
+  "hudColor": "TEAL",
+  "hudShowTimer": true,
+  "hudShowRates": false,
+  "hudShowOres": false,
+  "hudTextShadow": false,
   "showSummaryOnStop": true,
   "showMessages": true,
   "refreshSeconds": 30
 }
 ```
 
-HUD stats can be any of `BLOCKS_MINED`, `BLOCKS_PLACED`, `ORES_MINED`, `MOB_KILLS`, `DEATHS`, `DISTANCE` and `XP`.
+HUD stats can be any of `BLOCKS_MINED`, `BLOCKS_PLACED`, `ORES_MINED`, `MOB_KILLS`, `DEATHS`, `DISTANCE`,
+`WALKED`, `FLOWN`, `RIDDEN` and `XP`. `hudScale` is 50 to 200 (percent), `hudOpacity` 0 to 100, and `hudColor` one
+of `TEAL`, `WHITE`, `GOLD`, `GREEN`, `BLUE` and `PINK`. `hudShowOres` lists each ore under "Ores mined".
 
 ## Building from source
 
