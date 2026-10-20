@@ -1,0 +1,36 @@
+{
+	"schemaVersion": 1,
+	"id": "session-stats",
+	"version": "${version}",
+	"name": "Session Stats",
+	"description": "Record a play session with one key and get a clean summary of what you did: blocks, ores, kills, distance and XP, with per-hour rates and a history of past sessions.",
+	"authors": [
+		"Julz"
+	],
+	"contact": {
+		"sources": "https://github.com/Julz0711/session-stats",
+		"issues": "https://github.com/Julz0711/session-stats/issues"
+	},
+	"license": "CC0-1.0",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.julz.sessionstats.client.SessionStatsClient"
+		],
+		"modmenu": [
+			"com.julz.sessionstats.compat.ModMenuIntegration"
+		]
+	},
+	"mixins": [
+		"session-stats.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"modmenu": "*"
+	}
+}
